@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSecOps Vulnerability Scanner Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; text-align: center; padding-top: 40px; }
+        .card { background: white; max-width: 600px; margin: auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #0078d4; font-size: 24px; }
+        .status-badge { display: inline-block; background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-bottom: 20px; }
+        form { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="file"] { margin-bottom: 15px; width: 100%; }
+        button { background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        button:hover { background: #005a9e; }
+        .result { margin-top: 15px; background: #eef2f5; padding: 10px; border-radius: 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Automated Vulnerability Scanner</h1>
+        <div class="status-badge">Secure & Running</div>
+        <p>Upload your application code or archive to scan for security insights:</p>
+        
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label for="file">Select Code File / Archive (.zip or source):</label>
+            <input type="file" name="file" id="file" required>
+            <button type="submit">Upload & Scan</button>
+        </form>
+
+        {% if filename %}
+        <div class="result">
+            <strong>Uploaded Successfully:</strong> {{ filename }}<br>
+            <em>Ready for containerization & scanning pipeline.</em>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

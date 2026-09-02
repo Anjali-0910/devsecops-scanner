@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DR Control Panel</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; background: #f4f4f9; text-align: center; }
+    .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
+    button { background: #1e40af; color: white; border: none; padding: 15px 30px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 20px;}
+    button:hover { background: #1e3a8a; }
+    #status { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Disaster Recovery Web Trigger</h2>
+    <p>Click below to execute an immediate emergency cloud backup override.</p>
+    <button onclick="triggerBackup()">Run Backup NOW</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // Paste your actual API Gateway Invoke URL below inside the quotes
+    const API_URL = "https://cb51njm077.execute-api.ap-south-1.amazonaws.com/prod-stage/backup";
+
+    async function triggerBackup() {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = 'Triggering cloud pipeline...';
+      statusDiv.style.color = '#d97706';
+      
+      try {
+        const response = await fetch(API_URL, { method: 'POST' });
+        const data = await response.json();
+        
+        if(response.ok) {
+          statusDiv.innerHTML = '✅ SUCCESS: ' + data.message + '<br>Stored File: ' + data.file;
+          statusDiv.style.color = 'green';
+        } else {
+          statusDiv.innerHTML = '❌ ERROR: ' + data.error;
+          statusDiv.style.color = 'red';
+        }
+      } catch (err) {
+        statusDiv.innerHTML = '❌ NETWORK ERROR: Verify your API Gateway URL and check if CORS is enabled.';
+        statusDiv.style.color = 'red';
+      }
+    }
+  </script>
+</body>
+</html>
