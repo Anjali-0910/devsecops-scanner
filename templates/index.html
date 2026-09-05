@@ -3,109 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevSecOps Enterprise Security Console</title>
+    <title>ContainerShield: SOC Enterprise Security Console</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #090d16; 
-            color: #f8fafc; 
+            background: #0d1117; 
+            color: #c9d1d9; 
             height: 100vh;
             display: flex;
             overflow: hidden;
         }
         
-        /* 70% Left Main Display Section */
         .main-display {
             flex: 7;
-            background: #0b0f19;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            overflow-y: auto;
-            border-right: 1px solid #1e293b;
-        }
-        
-        /* 30% Right Control & Upload Section */
-        .side-control {
-            flex: 3;
-            background: #111827;
+            background: #0d1117;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
+            overflow-y: auto;
+            border-right: 1px solid #30363d;
+        }
+        
+        .side-control {
+            flex: 3;
+            background: #161b22;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
             overflow-y: auto;
         }
 
-        h1 { color: #38bdf8; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        h2 { color: #f1f5f9; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-        p { color: #94a3b8; font-size: 12px; }
+        h1 { color: #58a6ff; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; font-family: monospace; }
+        h2 { color: #f0f6fc; font-size: 13px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        p { color: #8b949e; font-size: 11px; }
 
-        /* Card container */
         .card {
-            background: #1f2937;
-            border: 1px solid #374151;
-            padding: 16px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: #161b22;
+            border: 1px solid #30363d;
+            padding: 14px;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
         }
 
-        /* Top Analytics Grid (Charts & Metrics side-by-side) */
-        .analytics-grid {
+        .summary-row {
             display: grid;
-            grid-template-columns: 1.2fr 1.8fr;
-            gap: 16px;
-        }
-
-        /* Severity breakdown bars */
-        .severity-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 11px;
-            margin-bottom: 6px;
-            font-family: monospace;
-        }
-        .bar-bg { background: #374151; height: 6px; border-radius: 3px; flex: 1; margin: 0 10px; overflow: hidden; }
-        .bar-fill { height: 100%; border-radius: 3px; }
-
-        /* Metrics Grid */
-        .metrics-subgrid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 10px;
         }
-        .metric-card {
-            background: #111827;
-            border: 1px solid #374151;
-            padding: 12px;
-            border-radius: 8px;
+        .sum-card {
+            background: #21262d;
+            border: 1px solid #30363d;
+            padding: 10px;
+            border-radius: 6px;
             text-align: center;
         }
-        .metric-val { font-size: 18px; font-weight: bold; margin-top: 4px; font-family: monospace; }
-        .val-total { color: #38bdf8; }
-        .val-done { color: #22c55e; }
-        .val-err { color: #ef4444; }
+        .sum-val { font-size: 18px; font-weight: bold; font-family: monospace; margin-top: 2px; }
+        .trend { font-size: 9px; margin-top: 2px; display: flex; justify-content: center; align-items: center; gap: 2px; }
+        .trend-up { color: #f85149; }
+        .trend-down { color: #3fb950; }
 
-        /* Progress Bar */
-        .progress-container {
-            background: #111827;
-            border-radius: 6px;
-            overflow: hidden;
-            height: 10px;
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .vuln-table {
             width: 100%;
-            margin: 8px 0;
-            border: 1px solid #374151;
+            border-collapse: collapse;
+            font-size: 11px;
+            font-family: monospace;
         }
-        .progress-bar {
-            background: linear-gradient(90deg, #38bdf8, #22c55e);
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease;
+        .vuln-table th, .vuln-table td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
         }
+        .vuln-table th { color: #8b949e; background: #21262d; }
+        .badge-crit { color: #f85149; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.3); padding: 1px 5px; border-radius: 4px; font-weight: bold; }
+        .badge-high { color: #f0883e; background: rgba(240, 136, 62, 0.15); border: 1px solid rgba(240, 136, 62, 0.3); padding: 1px 5px; border-radius: 4px; font-weight: bold; }
+        .badge-med { color: #d29922; background: rgba(210, 153, 34, 0.15); border: 1px solid rgba(210, 153, 34, 0.3); padding: 1px 5px; border-radius: 4px; font-weight: bold; }
+        .badge-low { color: #3fb950; background: rgba(63, 185, 80, 0.15); border: 1px solid rgba(63, 185, 80, 0.3); padding: 1px 5px; border-radius: 4px; font-weight: bold; }
 
-        /* File List Table View */
+        .layer-bar-container { margin-bottom: 6px; font-size: 10px; font-family: monospace; }
+        .layer-info { display: flex; justify-content: space-between; margin-bottom: 2px; color: #8b949e; }
+        .layer-stack { height: 8px; background: #21262d; border-radius: 4px; display: flex; overflow: hidden; border: 1px solid #30363d; }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #21262d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            font-size: 10px;
+            font-family: monospace;
+        }
+        .step { display: flex; align-items: center; gap: 4px; color: #8b949e; }
+        .step.done { color: #3fb950; }
+        .step.active { color: #d29922; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+        .terminal-box {
+            background: #010409;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 10px;
+            color: #3fb950;
+            height: 130px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        .terminal-box .sys { color: #58a6ff; }
+        .terminal-box .err { color: #f85149; }
+        .terminal-box .warn { color: #d29922; }
+
+        .upload-area {
+            border: 2px dashed #30363d;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            background: #0d1117;
+            transition: border-color 0.2s;
+        }
+        .upload-area:hover { border-color: #58a6ff; }
+        input[type="file"] { color: #8b949e; font-size: 10px; width: 100%; cursor: pointer; }
+
+        #fileChosenLabel {
+            font-size: 10px;
+            color: #58a6ff;
+            margin-top: 6px;
+            display: block;
+            font-family: monospace;
+        }
+        
+        .btn-scan { 
+            background: #238636; 
+            color: white; 
+            border: none; 
+            padding: 8px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 11px; 
+            font-weight: 600; 
+            width: 100%; 
+            margin-top: 8px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-scan:hover { background: #2ea043; }
+
+        .btn-export {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+            width: 100%;
+            margin-top: 6px;
+        }
+        .btn-export:hover { background: #30363d; }
+
         .file-table {
             width: 100%;
             border-collapse: collapse;
@@ -113,156 +192,167 @@
             font-family: monospace;
         }
         .file-table th, .file-table td {
-            padding: 6px 10px;
+            padding: 6px 8px;
             text-align: left;
-            border-bottom: 1px solid #374151;
+            border-bottom: 1px solid #30363d;
         }
-        .file-table th { color: #94a3b8; background: #111827; font-weight: 600; }
-        .badge-ok { color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(34, 197, 94, 0.2); }
-        .badge-err { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.2); }
-
-        /* Logs Container */
-        .logs-box {
-            background: #030712;
-            border: 1px solid #374151;
-            border-radius: 6px;
-            padding: 10px;
-            font-family: monospace;
+        .file-table th { color: #8b949e; background: #21262d; }
+        .file-empty {
             font-size: 11px;
-            color: #22c55e;
-            height: 160px;
-            overflow-y: auto;
-        }
-
-        /* Folder Upload Box */
-        .upload-area {
-            border: 2px dashed #4b5563;
-            padding: 16px;
-            border-radius: 8px;
+            color: #6e7681;
             text-align: center;
-            background: #090d16;
-            transition: border-color 0.2s;
+            padding: 14px 0;
+            font-family: monospace;
         }
-        .upload-area:hover { border-color: #38bdf8; }
-        input[type="file"] { color: #94a3b8; font-size: 11px; width: 100%; cursor: pointer; }
-        
-        button { 
-            background: #0284c7; 
-            color: white; 
-            border: none; 
-            padding: 10px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 12px; 
-            font-weight: 600; 
-            width: 100%; 
-            margin-top: 10px;
-            transition: background 0.2s;
-        }
-        button:hover { background: #0369a1; }
+        .status-ok { color: #3fb950; }
     </style>
 </head>
 <body>
 
     <div class="main-display">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h1>🛡️ DevSecOps Security Console</h1>
-                <p>Automated Vulnerability Scanner & Containerized CI/CD Inspection Pipeline</p>
+            <h1><i class="bi bi-shield-lock-fill" style="color: #58a6ff;"></i> ContainerShield // SOC Operations Console</h1>
+            <div style="font-size: 10px; font-family: monospace; background: #21262d; border: 1px solid #30363d; padding: 3px 8px; border-radius: 12px; color: #3fb950;">
+                ● Target: devsecops-scanner:latest
             </div>
-            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 11px; color: #22c55e; font-family: monospace;">
-                ● System Secure & Online
+        </div>
+
+        <div class="summary-row">
+            <div class="sum-card">
+                <p>Total Vulns</p>
+                <div class="sum-val" style="color: #c9d1d9;">14</div>
+                <div class="trend trend-up"><i class="bi bi-arrow-up-right"></i> +2 from last scan</div>
+            </div>
+            <div class="sum-card">
+                <p>Critical</p>
+                <div class="sum-val" style="color: #f85149;">3</div>
+                <div class="trend trend-up"><i class="bi bi-exclamation-triangle-fill"></i> Gate Fail</div>
+            </div>
+            <div class="sum-card">
+                <p>High</p>
+                <div class="sum-val" style="color: #f0883e;">5</div>
+                <div class="trend trend-down"><i class="bi bi-arrow-down-right"></i> -1 fixed</div>
+            </div>
+            <div class="sum-card">
+                <p>Medium</p>
+                <div class="sum-val" style="color: #d29922;">4</div>
+                <div class="trend">Stable</div>
+            </div>
+            <div class="sum-card">
+                <p>Low/Safe</p>
+                <div class="sum-val" style="color: #3fb950;">2</div>
+                <div class="trend trend-down">Secure</div>
             </div>
         </div>
 
         <div class="analytics-grid">
-            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-                <h2>Pipeline Metrics</h2>
-                <div class="metrics-subgrid">
-                    <div class="metric-card">
-                        <p style="font-size: 10px;">Files</p>
-                        <div class="metric-val val-total">{% if total_files %}{{ total_files }}{% else %}0{% endif %}</div>
-                    </div>
-                    <div class="metric-card">
-                        <p style="font-size: 10px;">Status</p>
-                        <div class="metric-val val-done">100%</div>
-                    </div>
-                    <div class="metric-card">
-                        <p style="font-size: 10px;">Risks</p>
-                        <div class="metric-val val-err">1</div>
-                    </div>
-                </div>
-                <div style="margin-top: 8px; font-size: 11px; color: #94a3b8;">
-                    Security Gate: <span style="color: #ef4444; font-weight: bold;">Review Required</span>
+            <div class="card" style="display: flex; flex-direction: column; align-items: center;">
+                <h2><i class="bi bi-pie-chart-fill"></i> Severity Proportional Distribution</h2>
+                <div style="width: 150px; height: 150px; margin-top: 5px;">
+                    <canvas id="severityChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
-                <h2>Vulnerability Severity Weight</h2>
-                <div style="margin-top: 6px;">
-                    <div class="severity-row">
-                        <span style="color: #ef4444;">Critical</span>
-                        <div class="bar-bg"><div class="bar-fill" style="width: 20%; background: #ef4444;"></div></div>
-                        <span>1</span>
+                <h2><i class="bi bi-speedometer2"></i> Security Posture Score & Diff</h2>
+                <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 10px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; font-family: monospace; color: #f85149;">62<span style="font-size: 14px; color: #8b949e;">/100</span></div>
+                        <p style="font-size: 10px; margin-top: 2px;">Risk Rating: <span style="color: #f85149; font-weight: bold;">CRITICAL</span></p>
                     </div>
-                    <div class="severity-row">
-                        <span style="color: #f97316;">High</span>
-                        <div class="bar-bg"><div class="bar-fill" style="width: 0%; background: #f97316;"></div></div>
-                        <span>0</span>
-                    </div>
-                    <div class="severity-row">
-                        <span style="color: #eab308;">Medium</span>
-                        <div class="bar-bg"><div class="bar-fill" style="width: 40%; background: #eab308;"></div></div>
-                        <span>2</span>
-                    </div>
-                    <div class="severity-row">
-                        <span style="color: #3b82f6;">Low</span>
-                        <div class="bar-bg"><div class="bar-fill" style="width: 10%; background: #3b82f6;"></div></div>
-                        <span>0</span>
+                    <div style="border-left: 1px solid #30363d; padding-left: 15px; font-size: 10px; font-family: monospace; line-height: 1.5;">
+                        <span style="color: #3fb950;">✔ 2 vulnerabilities fixed</span><br>
+                        <span style="color: #f85149;">✘ 3 new CVEs introduced</span><br>
+                        <span style="color: #d29922;">⟳ 1 patch pending review</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Scan & Containerization Execution</h2>
-                <span style="font-size: 11px; font-family: monospace; color: #38bdf8;">Trivy v0.51 Engine</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 4px; color: #94a3b8;">
-                <span>Directory parsed & packaged successfully</span>
-                <span style="color: #22c55e; font-weight: bold;">Completed</span>
-            </div>
-            <div class="progress-container">
-                <div class="progress-bar" style="width: 100%;"></div>
+            <h2><i class="bi bi-layers-fill"></i> Dockerfile Layer Vulnerability Breakdown (Trivy Inspection)</h2>
+            <div style="margin-top: 8px;">
+                <div class="layer-bar-container">
+                    <div class="layer-info"><span>FROM python:3.11-slim (Base OS layer)</span><span style="color: #f85149;">2 Critical, 3 High</span></div>
+                    <div class="layer-stack"><div style="width: 50%; background: #f85149;"></div><div style="width: 30%; background: #f0883e;"></div></div>
+                </div>
+                <div class="layer-bar-container">
+                    <div class="layer-info"><span>RUN pip install -r requirements.txt (Dependencies)</span><span style="color: #f85149;">1 Critical, 2 High</span></div>
+                    <div class="layer-stack"><div style="width: 25%; background: #f85149;"></div><div style="width: 25%; background: #f0883e;"></div></div>
+                </div>
+                <div class="layer-bar-container">
+                    <div class="layer-info"><span>COPY . /app (Source Code & Templates)</span><span style="color: #3fb950;">0 Vulnerabilities (Clean)</span></div>
+                    <div class="layer-stack"><div style="width: 0%; background: #3fb950;"></div></div>
+                </div>
             </div>
         </div>
 
-        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
-            <h2>Directory File Inspection Log</h2>
-            <div style="max-height: 150px; overflow-y: auto; margin-top: 4px;">
+        <div class="card">
+            <h2><i class="bi bi-folder2-open"></i> Directory File Inspection Log</h2>
+            <p style="margin-bottom: 6px;">Files ingested from your last uploaded directory.</p>
+            {% if uploaded_files and uploaded_files|length > 0 %}
+            <div style="max-height: 160px; overflow-y: auto;">
                 <table class="file-table">
                     <thead>
                         <tr>
-                            <th>File / Path Reference</th>
-                            <th>Layer Class</th>
-                            <th>Status Result</th>
+                            <th>#</th>
+                            <th>File Name</th>
+                            <th>Path</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% if uploaded_files %}
-                            {% for file in uploaded_files %}
-                            <tr>
-                                <td>{{ file }}</td>
-                                <td>Source Code / AST</td>
-                                <td><span class="badge-ok">✓ Checked</span></td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="3" style="text-align: center; color: #6b7280; padding: 15px;">Awaiting directory upload from control panel...</td>
-                            </tr>
-                        {% endif %}
+                        {% for file in uploaded_files %}
+                        <tr>
+                            <td style="color: #8b949e;">{{ loop.index }}</td>
+                            <td>{{ file.name if file.name is defined else file }}</td>
+                            <td style="color: #8b949e;">{{ file.path if file.path is defined else '' }}</td>
+                            <td class="status-ok"><i class="bi bi-check-circle-fill"></i> Checked</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="file-empty">No directory uploaded yet — results will appear here after a scan.</div>
+            {% endif %}
+        </div>
+
+        <div class="card" style="flex: 1;">
+            <h2><i class="bi bi-bug-fill"></i> Discovered Vulnerabilities Registry</h2>
+            <div style="max-height: 140px; overflow-y: auto; margin-top: 4px;">
+                <table class="vuln-table">
+                    <thead>
+                        <tr>
+                            <th>Severity</th>
+                            <th>CVE ID</th>
+                            <th>Package</th>
+                            <th>Installed</th>
+                            <th>Fixed Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge-crit">CRITICAL</span></td>
+                            <td style="color: #58a6ff;">CVE-2024-38875</td>
+                            <td>werkzeug</td>
+                            <td style="color: #8b949e;">3.0.1</td>
+                            <td style="color: #3fb950;">3.0.6</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-crit">CRITICAL</span></td>
+                            <td style="color: #58a6ff;">CVE-2023-45853</td>
+                            <td>zlib</td>
+                            <td style="color: #8b949e;">1.2.11</td>
+                            <td style="color: #3fb950;">1.2.12</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-high">HIGH</span></td>
+                            <td style="color: #58a6ff;">CVE-2024-21538</td>
+                            <td>jinja2</td>
+                            <td style="color: #8b949e;">3.1.3</td>
+                            <td style="color: #3fb950;">3.1.4</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -271,41 +361,90 @@
 
     <div class="side-control">
         <div>
-            <h2>Upload Directory</h2>
-            <p>Select target folder for analysis.</p>
+            <h2><i class="bi bi-cpu-fill"></i> Control & Ingestion</h2>
+            <p>Upload project directory or execute scan.</p>
         </div>
 
         <form action="/upload" method="POST" enctype="multipart/form-data" class="card">
             <div class="upload-area">
-                <input type="file" name="folder" webkitdirectory directory multiple required>
+                <input type="file" id="folderInput" name="folder" webkitdirectory directory multiple required>
+                <span id="fileChosenLabel">No folder chosen</span>
             </div>
-            <button type="submit">Ingest & Run Security Scan</button>
+            <button type="submit" class="btn-scan"><i class="bi bi-play-circle-fill"></i> Ingest & Run Trivy Scan</button>
         </form>
 
         {% if message %}
-        <div class="card" style="border-left: 4px solid #38bdf8;">
-            <p style="color: #38bdf8; font-weight: bold; margin-bottom: 2px; font-size: 11px;">System Status:</p>
-            <p style="color: #cbd5e1; font-size: 11px;">{{ message }}</p>
+        <div class="card" style="border-left: 3px solid #58a6ff; padding: 10px;">
+            <p style="color: #58a6ff; font-weight: bold; font-size: 10px;">Notification:</p>
+            <p style="color: #c9d1d9; font-size: 10px;">{{ message }}</p>
         </div>
         {% endif %}
 
+        <div class="card">
+            <h2><i class="bi bi-git"></i> CI/CD Pipeline Status</h2>
+            <div class="stepper" style="margin-top: 6px;">
+                <div class="step done"><i class="bi bi-check-circle-fill"></i> Push</div>
+                <div class="step done"><i class="bi bi-check-circle-fill"></i> Build</div>
+                <div class="step active"><i class="bi bi-arrow-repeat"></i> Scan</div>
+                <div class="step"><i class="bi bi-dash-circle"></i> Gate</div>
+            </div>
+        </div>
+
         <div class="card" style="flex: 1; display: flex; flex-direction: column;">
-            <h2>Terminal Console</h2>
-            <p style="margin-bottom: 6px; font-size: 10px; color: #94a3b8;">Real-time pipeline diagnostics</p>
-            <div class="logs-box">
-                [07:15:00] SecOps Core Engine v2.4 initialized.<br>
-                [07:15:02] Listening on 127.0.0.1:5000...<br>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <h2><i class="bi bi-terminal-fill"></i> SOC Live Stream</h2>
+                <span style="font-size: 9px; color: #3fb950;">● Connected</span>
+            </div>
+            <div class="terminal-box">
+                <span class="sys">[08:50:01] ContainerShield Daemon v2.4 initialized.</span><br>
+                <span class="sys">[08:50:03] Binding socket to port 5000...</span><br>
                 {% if uploaded_files %}
-                [07:15:20] Directory payload ingested.<br>
-                [07:15:21] Spawning temporary Docker layer...<br>
-                [07:15:22] Trivy scanner analysis executed.<br>
-                [07:15:23] Pipeline sync verified with GitHub.
+                <span class="warn">[08:52:10] Ingested directory payload.</span><br>
+                <span class="sys">[08:52:11] Spawning ephemeral Docker container...</span><br>
+                <span class="err">[08:52:13] [FATAL] Trivy scanned 14 vulnerabilities.</span><br>
+                <span class="warn">[08:52:14] Security gate policy triggered: BUILD FAILED.</span><br>
                 {% else %}
-                [07:15:05] Waiting for directory upload...
+                <span style="color: #8b949e;">[08:50:05] Awaiting project folder upload...</span><br>
                 {% endif %}
             </div>
+            <button class="btn-export" onclick="alert('Exporting SOC Audit Report as PDF/CSV...')"><i class="bi bi-download"></i> Export Audit Report (PDF)</button>
         </div>
     </div>
 
+    <script>
+        const ctx = document.getElementById('severityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [3, 5, 4, 2],
+                    backgroundColor: ['#f85149', '#f0883e', '#d29922', '#3fb950'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#c9d1d9', font: { size: 9 }, boxWidth: 8 }
+                    }
+                }
+            }
+        });
+
+        const folderInput = document.getElementById('folderInput');
+        const fileChosenLabel = document.getElementById('fileChosenLabel');
+        folderInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                fileChosenLabel.textContent = `${files.length} file(s) selected from folder`;
+            } else {
+                fileChosenLabel.textContent = 'No folder chosen';
+            }
+        });
+    </script>
 </body>
 </html>
